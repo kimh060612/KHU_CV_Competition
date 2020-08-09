@@ -43,8 +43,8 @@ class ResNetModel(tfk.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        self.Res1 = ResNetLayer()
 
-    def call(self):
+    def call(self, Input):
+
         pass
-
-    
