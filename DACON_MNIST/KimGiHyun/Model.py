@@ -46,14 +46,22 @@ class ResNetModel(tfk.Model):
         super().__init__(*args, **kwargs)
         
         self.Padding1 = tfk.layers.ZeroPadding2D(padding=(3, 3))
-        self.conv1 = tfk.layers.Conv2D(filters=32, kernel_size=(7,7), stride=(2,2))
+        self.conv1 = tfk.layers.Conv2D(filters=32, kernel_size=(5,5), stride=(2,2))
         self.Batch1 = tfk.layers.BatchNormalization(momentum=0.99, epsilon= 0.001)
         self.Activation1 = tfk.layers.ReLU()
         self.Padding2 = tfk.layers.ZeroPadding2D(padding=(1,1))
 
         self.ResLayer1 = ResidualBlock(32, 64)
-        
+        self.ResLayer2 = ResidualBlock(64, 64)
 
     def call(self, Input):
-
-        pass
+        Z = Input
+        Z = self.Padding1(Z)
+        Z = self.conv1(Z)
+        Z = self.Batch1(Z)
+        Z = self.Activation1(Z)
+        Z = self.Padding2(Z)
+        Z = self.ResLayer1(Z)
+        Z = self.ResLayer2(Z)
+        
+        return Z
