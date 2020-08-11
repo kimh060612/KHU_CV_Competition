@@ -1,7 +1,9 @@
 import tensorflow as tf
 from tensorflow import keras as tfk
 
-class ResNetLayer(tfk.layers.Layer):
+# ResNet50 Structure
+
+class ResidualBlock(tfk.layers.Layer):
     def __init__(self, InputChannel, OutputChannel, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable=trainable, name=name, dtype=dtype, dynamic=dynamic, **kwargs)
 
@@ -17,7 +19,7 @@ class ResNetLayer(tfk.layers.Layer):
         self.LeakyReLU3 = tfk.layers.LeakyReLU()
 
         # Skip Connection
-        self.SkipConnection = tfk.layers.Conv2D(filters=OutputChannel, kernel_size=(1, 1), strides=(1, 1))
+        self.SkipConnection = tfk.layers.Conv2D(filters=OutputChannel, kernel_size=(3, 3), strides=(1, 1))
         self.LeakyReLUSkip = tfk.layers.LeakyReLU()
         if (not InputChannel == OutputChannel):
             self.SkipConnection = True
@@ -43,7 +45,14 @@ class ResNetModel(tfk.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.Res1 = ResNetLayer()
+        self.Padding1 = tfk.layers.ZeroPadding2D(padding=(3, 3))
+        self.conv1 = tfk.layers.Conv2D(filters=32, kernel_size=(7,7), stride=(2,2))
+        self.Batch1 = tfk.layers.BatchNormalization(momentum=0.99, epsilon= 0.001)
+        self.Activation1 = tfk.layers.ReLU()
+        self.Padding2 = tfk.layers.ZeroPadding2D(padding=(1,1))
+
+        self.ResLayer1 = ResidualBlock(32, 64)
+        
 
     def call(self, Input):
 
