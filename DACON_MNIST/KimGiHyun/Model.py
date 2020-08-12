@@ -54,6 +54,9 @@ class ResNetModel(tfk.Model):
         self.ResLayer1 = ResidualBlock(32, 64)
         self.ResLayer2 = ResidualBlock(64, 64)
 
+        self.GlobalAvgPool = tfk.layers.GlobalAveragePooling2D()
+        self.OutputDense = tfk.layers.Dense(10, activation="softmax")
+
     def call(self, Input):
         Z = Input
         Z = self.Padding1(Z)
@@ -63,5 +66,7 @@ class ResNetModel(tfk.Model):
         Z = self.Padding2(Z)
         Z = self.ResLayer1(Z)
         Z = self.ResLayer2(Z)
+        Z = self.GlobalAvgPool(Z)
+        Z = self.OutputDense(Z)
         
         return Z
