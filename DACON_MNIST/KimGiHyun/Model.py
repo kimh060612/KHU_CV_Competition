@@ -12,17 +12,17 @@ class ResidualBlock(tfk.layers.Layer):
         self.conv1 = tfk.layers.Conv2D(filters=OutputChannel//2, kernel_size=(1, 1), strides=(1, 1))
         self.LeakyReLU1 = tfk.layers.LeakyReLU()
         self.Batch2 = tfk.layers.BatchNormalization(momentum=0.99, epsilon= 0.001)
-        self.conv2 = tfk.layers.Conv2D(filters=OutputChannel//2, kernel_size=(3, 3), strides=(1, 1))
+        self.conv2 = tfk.layers.Conv2D(filters=OutputChannel//2, kernel_size=(3, 3), strides=(1, 1), padding="SAME")
         self.LeakyReLU2 = tfk.layers.LeakyReLU()
         self.Batch3 = tfk.layers.BatchNormalization(momentum=0.99, epsilon= 0.001)
         self.conv3 = tfk.layers.Conv2D(filters=OutputChannel, kernel_size=(1, 1), strides=(1, 1))
         self.LeakyReLU3 = tfk.layers.LeakyReLU()
 
         # Skip Connection
-        self.SkipConnection = tfk.layers.Conv2D(filters=OutputChannel, kernel_size=(3, 3), strides=(1, 1))
+        self.SkipConnection = tfk.layers.Conv2D(filters=OutputChannel, kernel_size=(1, 1), strides=(1, 1))
         self.LeakyReLUSkip = tfk.layers.LeakyReLU()
-        if (not InputChannel == OutputChannel):
-            self.SkipConnection = True
+        if InputChannel != OutputChannel:
+            self.IsSkipConnection = True
 
     def call(self, Input):
         Skip = Input
@@ -42,11 +42,11 @@ class ResidualBlock(tfk.layers.Layer):
         return Z + Skip
 
 class ResNetModel(tfk.Model):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, output_dim, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         self.Padding1 = tfk.layers.ZeroPadding2D(padding=(3, 3))
-        self.conv1 = tfk.layers.Conv2D(filters=32, kernel_size=(5,5), stride=(2,2))
+        self.conv1 = tfk.layers.Conv2D(filters=32, kernel_size=(5,5), strides=(2,2))
         self.Batch1 = tfk.layers.BatchNormalization(momentum=0.99, epsilon= 0.001)
         self.Activation1 = tfk.layers.ReLU()
         self.Padding2 = tfk.layers.ZeroPadding2D(padding=(1,1))
@@ -55,7 +55,7 @@ class ResNetModel(tfk.Model):
         self.ResLayer2 = ResidualBlock(64, 64)
 
         self.GlobalAvgPool = tfk.layers.GlobalAveragePooling2D()
-        self.OutputDense = tfk.layers.Dense(10, activation="softmax")
+        self.OutputDense = tfk.layers.Dense(output_dim, activation="softmax")
 
     def call(self, Input):
         Z = Input
@@ -68,5 +68,5 @@ class ResNetModel(tfk.Model):
         Z = self.ResLayer2(Z)
         Z = self.GlobalAvgPool(Z)
         Z = self.OutputDense(Z)
-        
         return Z
+    
