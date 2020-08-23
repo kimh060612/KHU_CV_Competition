@@ -1,11 +1,12 @@
 import models
-import cPickle
+import pickle as _pickle
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf # for using tf.app - Tensorflow version1
 
 def unpickle(file):
     fo = open(file, 'rb')
-    dict = cPickle.load(fo)
+    dict = _pickle.load(fo)
     fo.close()
     return dict
 
@@ -76,10 +77,10 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 saver = tf.train.Saver()
 checkpoint = tf.train.latest_checkpoint(".")
 if checkpoint:
-    print "Restoring from checkpoint", checkpoint
+    print("Restoring from checkpoint", checkpoint)
     saver.restore(sess, checkpoint)
 else:
-    print "Couldn't find checkpoint to restore from. Starting over."
+    print("Couldn't find checkpoint to restore from. Starting over.")
 
 for j in range (10):
     for i in range (0, 50000, batch_size):
@@ -89,7 +90,7 @@ for j in range (10):
             learning_rate: 0.001}
         sess.run([train_op], feed_dict=feed_dict)
         if i % 512 == 0:
-            print "training on image #%d" % i
+            print("training on image #%d" % i)
             saver.save(sess, 'progress', global_step=i)
 
 for i in range (0, 10000, batch_size):
@@ -99,6 +100,6 @@ for i in range (0, 10000, batch_size):
             Y: Y_test[i:i+batch_size]
         })
         accuracy_summary = tf.scalar_summary("accuracy", accuracy)
-        print acc
+        print(acc)
 
 sess.close()
