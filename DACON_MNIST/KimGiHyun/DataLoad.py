@@ -26,10 +26,10 @@ if train :
             TargetDigit.append(Digit)
             TargetLetter.append(Letter)
             Image.append(img)
-        Image = np.concatenate(Image, axis = 0)
-        TargetDigit = np.concatenate(TargetDigit, axis = 0)
-        TargetLetter = np.concatenate(TargetLetter, axis = 0)
-
+        Image = np.array(Image, dtype="float64")
+        TargetDigit = np.array(TargetDigit, dtype="float64")
+        TargetLetter = np.array(TargetLetter, dtype="float64")
+        print(Image.shape)
     np.save("./Image", Image)
     np.save("./TargetDigit", TargetDigit)
     np.save("./TargetLetter", TargetLetter)
@@ -47,9 +47,9 @@ else :
             img = np.array(img).reshape(28, 28, 1)
             TargetLetter.append(Letter)
             Image.append(img)
-        Image = np.concatenate(Image, axis = 0)
-        TargetLetter = np.concatenate(TargetLetter, axis = 0)
-
+        Image = np.array(Image, dtype="float64")
+        TargetLetter = np.array(TargetLetter, dtype="float64")
+        print(Image.shape)
     np.save("./ImageTest", Image)
     np.save("./TargetLetterTest", TargetLetter)
 
