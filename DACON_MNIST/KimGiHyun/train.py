@@ -4,7 +4,7 @@ from Model import ResidualBlock, ResNetModel
 import numpy as np
 import os
 
-EPOCHS = 800
+EPOCHS = 600
 
 if __name__ == "__main__":
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
