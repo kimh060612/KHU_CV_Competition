@@ -53,7 +53,6 @@ class ResNetModel(tfk.Model):
 
         self.PreResLayer1 = ResidualBlock(32, 64)
         self.PreResLayer2 = ResidualBlock(64, 64)
-        self.PreResLayer3 = ResidualBlock(64, 64)
         
         self.ResLayer1 = ResidualBlock(64, 64)
         self.ResLayer2 = ResidualBlock(64, 64)
@@ -68,7 +67,7 @@ class ResNetModel(tfk.Model):
         self.conv_aux = tfk.layers.Conv2D(filters=128, kernel_size=(5,5), strides=(2,2))
         #self.Drop2 = tfk.layers.Dropout(0.2)
         self.AuxLayer3 = ResidualBlock(128, 64)
-        self.AuxLayer4 = ResidualBlock(64, 64)
+        self.AuxLayer4 = ResidualBlock(64, 32)
         self.AuxDense = tfk.layers.Dense(output_dim2, activation="softmax")
 
         self.GlobalAvgPool = tfk.layers.GlobalAveragePooling2D()
@@ -83,7 +82,6 @@ class ResNetModel(tfk.Model):
         Z = self.Padding2(Z)
         Z = self.PreResLayer1(Z)
         Z = self.PreResLayer2(Z)
-        Z = self.PreResLayer3(Z)
         Aux = Z
         Z = self.ResLayer1(Z)
         Z = self.ResLayer2(Z)
