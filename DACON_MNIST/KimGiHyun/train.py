@@ -4,7 +4,7 @@ from Model import ResidualBlock, ResNetModel
 import numpy as np
 import os
 
-EPOCHS = 1500
+EPOCHS = 1200
 
 if __name__ == "__main__":
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     CrossEntropyLoss = tf.keras.losses.CategoricalCrossentropy()
 
     ResNet.compile(optimizer, loss=[CrossEntropyLoss, CrossEntropyLoss], loss_weights=[0.5, 0.5], metrics=['accuracy', 'accuracy'])
-    ResNet.fit(Train_data, [Train_target_digit, Train_target_letter], epochs=EPOCHS, batch_size=256)
+    ResNet.fit(Train_data, [Train_target_digit, Train_target_letter], epochs=EPOCHS, batch_size=128)
 
     tf.saved_model.save(ResNet, "model")
 
