@@ -41,6 +41,24 @@ class ResidualBlock(tfk.layers.Layer):
         Z = self.LeakyReLU3(Z)
         return Z + Skip
 
+class SqeeuzeNetBlock(tfk.layers.Layer):
+    def __init__(self, output_dim, ratio, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
+        super().__init__(trainable=trainable, name=name, dtype=dtype, dynamic=dynamic, **kwargs)
+        self.output_dim = output_dim
+        self.GAP = tfk.layers.GlobalAveragePooling2D()
+        self.excitation1 = tfk.layers.Dense(units=self.output_dim/ratio, kernel_initializer="he_normal")
+        self.ReLU1 = tfk.layers.ReLU()
+        self.excitation2 = tfk.layers.Dense(units=self.output_dim, kernel_initializer="he_normal")
+    
+    def call(self, Input):
+        Z = Input
+        Z = self.GAP(Z)
+        Z = self.excitation1(Z)
+        Z = self.ReLU1(Z)
+        Z = self.excitation2(Z)
+        Z = tf.reshape(Z, [-1, 1,1,self.output_dim])
+        return Input * Z
+
 class ResNetModel(tfk.Model):
     def __init__(self, output_dim1, output_dim2, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,7 +69,13 @@ class ResNetModel(tfk.Model):
         self.Activation1 = tfk.layers.ReLU()
         self.Padding2 = tfk.layers.ZeroPadding2D(padding=(1,1))
 
-        self.ResLayer1 = ResidualBlock(32, 64)
+        self.PreResLayer1 = ResidualBlock(32, 64)
+        self.PreSEBlock1 = SqeeuzeNetBlock(64, 4)
+        self.PreResLayer2 = ResidualBlock(64, 64)
+        self.PreSEBlock2 = SqeeuzeNetBlock(64, 4)
+        
+        self.ResLayer1 = ResidualBlock(64, 64)
+        self.SEBlock1 = SqeeuzeNetBlock(64, 4)
         self.ResLayer2 = ResidualBlock(64, 128)
         self.ResLayer3 = ResidualBlock(128, 128)
         self.conv_mid = tfk.layers.Conv2D(filters=128, kernel_size=(5,5), strides=(2,2))
@@ -63,6 +87,17 @@ class ResNetModel(tfk.Model):
         self.conv_aux = tfk.layers.Conv2D(filters=128, kernel_size=(5,5), strides=(2,2))
         self.AuxLayer3 = ResidualBlock(128, 128)
         self.AuxLayer4 = ResidualBlock(128, 64)
+        #self.Drop1 = tfk.layers.Dropout(0.2)
+        self.ResLayer4 = ResidualBlock(128, 64)
+        self.ResLayer5 = ResidualBlock(64, 32)
+
+        self.AuxLayer1 = ResidualBlock(64, 128)
+        self.SEBlockAux1 = SqeeuzeNetBlock(128, 4)
+        self.AuxLayer2 = ResidualBlock(128, 128)
+        self.conv_aux = tfk.layers.Conv2D(filters=128, kernel_size=(5,5), strides=(2,2))
+        #self.Drop2 = tfk.layers.Dropout(0.2)
+        self.AuxLayer3 = ResidualBlock(128, 64)
+        self.AuxLayer4 = ResidualBlock(64, 32)
         self.AuxDense = tfk.layers.Dense(output_dim2, activation="softmax")
 
         self.GlobalAvgPool = tfk.layers.GlobalAveragePooling2D()
@@ -75,18 +110,26 @@ class ResNetModel(tfk.Model):
         Z = self.Batch1(Z)
         Z = self.Activation1(Z)
         Z = self.Padding2(Z)
+        Z = self.PreResLayer1(Z)
+        Z = self.PreSEBlock1(Z)
+        Z = self.PreResLayer2(Z)
+        Z = self.PreSEBlock2(Z)
         Aux = Z
         Z = self.ResLayer1(Z)
+        Z = self.SEBlock1(Z)
         Z = self.ResLayer2(Z)
         Z = self.ResLayer3(Z)
         Z = self.conv_mid(Z)
+        #Z = self.Drop1(Z)
         Z = self.ResLayer4(Z)
         Z = self.ResLayer5(Z)
         Z = self.GlobalAvgPool(Z)
         Z = self.OutputDense(Z)
         Aux = self.AuxLayer1(Aux)
+        Aux = self.SEBlockAux1(Aux)
         Aux = self.AuxLayer2(Aux)
         Aux = self.conv_aux(Aux)
+        #Aux = self.Drop2(Aux)
         Aux = self.AuxLayer3(Aux)
         Aux = self.AuxLayer4(Aux)
         Aux = self.GlobalAvgPool(Aux)
